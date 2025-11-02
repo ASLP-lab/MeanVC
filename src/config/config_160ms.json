@@ -1,0 +1,14 @@
+{
+    "model_type": "DiT",
+    "model": {
+        "dim": 512,
+        "depth": 4,
+        "heads": 2,
+        "ff_mult": 2,
+        "bn_dim": 256,
+        "conv_layers": 4,
+        "chunk_size": 16,
+        "dropout": 0.0,
+        "qk_norm": "rms_norm"
+    }
+}
