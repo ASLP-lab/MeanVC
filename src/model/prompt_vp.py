@@ -179,33 +179,6 @@ class MRTELayer(nn.Module):
         return x, k, v
 
 
-class MRTE(nn.Module):
-    def __init__(self, n_head, n_feat, dropout_rate,
-                 q_in_dim, k_in_dim, v_in_dim, num_blocks):
-        super(MRTE, self).__init__()
-        self.prompt_vp_encoders = torch.nn.ModuleList([
-            MRTELayer(n_head,
-                      n_feat=n_feat,
-                      o_feat=n_feat,
-                      dropout_rate=dropout_rate,
-                      q_in_dim=q_in_dim,
-                      k_in_dim=k_in_dim+80,
-                      v_in_dim=v_in_dim)
-            for _ in range(num_blocks)
-        ])
-        self.vp_proj = nn.Linear(256, 80, bias=False)
-
-    def forward(self, cond, prompts, spks):
-        query = cond   # B,T1,D1
-        key = prompts  # B,T2,D2
-        value = prompts
-        GE = self.vp_proj(spks).unsqueeze(1).repeat(1, key.shape[1], 1)
-        key = torch.cat((key, GE), dim=-1)
-        for idx, layer in enumerate(self.prompt_vp_encoders):
-            query, key, value = layer(query, key, value)
-            # query += GE
-        return query
-
 # class MRTE(nn.Module):
 #     def __init__(self, n_head, n_feat, dropout_rate,
 #                  q_in_dim, k_in_dim, v_in_dim, num_blocks):
@@ -216,21 +189,48 @@ class MRTE(nn.Module):
 #                       o_feat=n_feat,
 #                       dropout_rate=dropout_rate,
 #                       q_in_dim=q_in_dim,
-#                       k_in_dim=k_in_dim,
+#                       k_in_dim=k_in_dim+80,
 #                       v_in_dim=v_in_dim)
 #             for _ in range(num_blocks)
 #         ])
-#         self.vp_proj = nn.Linear(192, n_feat, bias=False)
+#         self.vp_proj = nn.Linear(256, 80, bias=False)
 
-#     def forward(self, feature):
-#         query = feature['token_emb'].transpose(1, 2)
-#         key = feature['prompt'].transpose(1, 2)
-#         value = feature['prompt'].transpose(1, 2)
-#         GE = self.vp_proj(feature['vp']).unsqueeze(1).repeat(1, query.shape[1], 1)
+#     def forward(self, cond, prompts, spks):
+#         query = cond   # B,T1,D1
+#         key = prompts  # B,T2,D2
+#         value = prompts
+#         GE = self.vp_proj(spks).unsqueeze(1).repeat(1, key.shape[1], 1)
+#         key = torch.cat((key, GE), dim=-1)
 #         for idx, layer in enumerate(self.prompt_vp_encoders):
 #             query, key, value = layer(query, key, value)
-#             query += GE
+#             # query += GE
 #         return query
+
+class MRTE(nn.Module):
+    def __init__(self, n_head, n_feat, dropout_rate,
+                 q_in_dim, k_in_dim, v_in_dim, num_blocks):
+        super(MRTE, self).__init__()
+        self.prompt_vp_encoders = torch.nn.ModuleList([
+            MRTELayer(n_head,
+                      n_feat=n_feat,
+                      o_feat=n_feat,
+                      dropout_rate=dropout_rate,
+                      q_in_dim=q_in_dim,
+                      k_in_dim=k_in_dim+n_feat,
+                      v_in_dim=v_in_dim)
+            for _ in range(num_blocks)
+        ])
+        self.vp_proj = nn.Linear(256, n_feat, bias=False)
+
+    def forward(self, cond, prompts, spks):
+        query = cond   # B,T1,D1
+        key = prompts  # B,T2,D2
+        value = prompts
+        GE = self.vp_proj(spks).unsqueeze(1).repeat(1, key.shape[1], 1)
+        key = torch.cat([key, GE], dim=-1)
+        for idx, layer in enumerate(self.prompt_vp_encoders):
+            query, key, value = layer(query, key, value)
+        return query
 
 
 class CrossAttentionEncoder(nn.Module):

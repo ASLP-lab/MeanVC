@@ -2,8 +2,6 @@
 ein notation:
 b - batch
 n - sequence
-nt - text sequence
-nw - raw wave length
 d - dimension
 """
 
@@ -16,19 +14,12 @@ from einops import rearrange
 
 from x_transformers.x_transformers import RotaryEmbedding
 
-from prompt_vp import MRTE
+from src.model.prompt_vp import MRTE
 from modules import (
     TimestepEmbedding,
-    ConvNeXtV2Block,
-    ConvPositionEmbedding,
-    DiTBlock,
     ChunkDiTBlock,
     AdaLayerNorm_Final,
-    precompute_freqs_cis,
-    get_pos_embed_indices,
 )
-
-
 
 
 # noised input audio and context mixing embedding
@@ -41,7 +32,6 @@ class InputEmbedding(nn.Module):
         # self.conv_pos_embed = ConvPositionEmbedding(dim=out_dim)
 
     def forward(self, x: float["b n d"], cond: float["b n d"], spks: float["b n d"], drop_audio_cond=False):  # noqa: F722
-    # def forward(self, x: float["b n d"], cond: float["b n d"], timbre_cond: float["b n d"], drop_audio_cond=False):  # noqa: F722
         if drop_audio_cond:  # cfg for cond audio
             cond = torch.zeros_like(cond)
             spks = torch.zeros_like(spks)
@@ -188,7 +178,7 @@ class DiT(nn.Module):
             else:
                 rope = self.rotary_embed.forward_from_seq_len(seq_len)
 
-            rope = (rope[0][:, - 120 : , :], rope[1])
+            rope = (rope[0][:, - 140 : , :], rope[1])
                 
 
         new_kv_cache = []

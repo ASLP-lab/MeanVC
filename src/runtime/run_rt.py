@@ -8,8 +8,6 @@ import torch
 from threading import Thread, Lock
 import torchaudio.compliance.kaldi as kaldi
 import librosa
-import soundfile as sf
-from dit_kvcache import DiT
 from librosa.filters import mel as librosa_mel_fn
 from speaker_verification.verification import init_model as init_sv_model
 import json
@@ -62,26 +60,6 @@ class MelSpectrogramFeatures(nn.Module):
         spec = _amp_to_db(spec, -115) - 20
         spec = _normalize(spec, 1, -115)
         return spec
-
-def load_model(model_config, ckpt_path):
-
-    with open(model_config) as f:
-        model_config = json.load(f)
-
-    model_cls = DiT
-    device = 'cpu'
-    dit_model = model_cls(**model_config["model"])
-    total_params = sum(p.numel() for p in dit_model.parameters())
-    print(f"Total parameters: {total_params}")
-    dit_model = dit_model.to(device)
-    checkpoint = torch.load(ckpt_path, weights_only=True, map_location='cpu')
-    if "model_state_dict" in checkpoint:
-        checkpoint = checkpoint["model_state_dict"]
-    dit_model.load_state_dict(checkpoint, strict=False)
-    dit_model = dit_model.to(device)
-    dit_model = dit_model.float()
-    dit_model.eval()
-    return dit_model
 
 
 def extract_fbanks(

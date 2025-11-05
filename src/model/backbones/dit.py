@@ -32,7 +32,6 @@ class InputEmbedding(nn.Module):
         # self.conv_pos_embed = ConvPositionEmbedding(dim=out_dim)
 
     def forward(self, x: float["b n d"], cond: float["b n d"], spks: float["b n d"], drop_audio_cond=False):  # noqa: F722
-    # def forward(self, x: float["b n d"], cond: float["b n d"], timbre_cond: float["b n d"], drop_audio_cond=False):  # noqa: F722
         if drop_audio_cond:  # cfg for cond audio
             cond = torch.zeros_like(cond)
             spks = torch.zeros_like(spks)
@@ -70,8 +69,6 @@ class DiT(nn.Module):
         self.r_time_embed = TimestepEmbedding(dim)
         self.input_embed = InputEmbedding(mel_dim, bn_dim, dim)
         self.cache_embed = nn.Linear(mel_dim, dim)
-        # self.batch_norm = nn.BatchNorm1d(dim) 
-        # self.batch_norm2 = nn.BatchNorm1d(dim) 
         self.rotary_embed = RotaryEmbedding(dim_head)
 
         self.dim = dim
@@ -157,7 +154,6 @@ class DiT(nn.Module):
         
         x = self.input_embed(x, timbre_cond, spks_, drop_audio_cond=is_uncondition)
         
-        # x = self.batch_norm(x.view(-1, x.shape[-1])).view(batch, seq_len, -1)
         
         if not is_inference:
             if cache != None:
@@ -190,21 +186,12 @@ class DiT(nn.Module):
         if self.long_skip_connection is not None:
             residual = x
 
-        # inner_hidden_states = []
         for index_block, block in enumerate(self.transformer_blocks):
             if self.checkpoint_activations:
                 # https://pytorch.org/docs/stable/checkpoint.html#torch.utils.checkpoint.checkpoint
                 x = torch.utils.checkpoint.checkpoint(self.ckpt_wrapper(block), x, t, mask, rope, use_reentrant=False)
             else:
                 x = block(x, t, mask=mask, rope=rope, is_inference=is_inference)
-                # bs = x.shape[0]
-                # sl = x.shape[1]
-            # x = self.batch_norm2(x.view(-1, x.shape[-1])).view(bs, sl, -1)
-
-            # if not is_inference:
-            #     for ssl_encoder_depth in self.ssl_encoder_depths:
-            #         if index_block == ssl_encoder_depth:
-            #             inner_hidden_states.append(x[:, -seq_len:, :])
 
         if self.long_skip_connection is not None:
             x = self.long_skip_connection(torch.cat((x, residual), dim=-1))

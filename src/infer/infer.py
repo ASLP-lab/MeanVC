@@ -3,87 +3,106 @@ import os
 import json
 import argparse
 import glob
-from src.model import DiT
+from src.infer.dit_kvcache import DiT
 from src.model.utils import load_checkpoint
 import numpy as np
 import torch
+import time
 from tqdm import tqdm
 import torchaudio
-from vocos.pretrained import Vocos
 
+C_KV_CACHE_MAX_LEN = 100
 
-def inference(model, vocos, bns, spk_emb, chunk_size, steps, spk_result_dir, device):   
-    time_points = torch.linspace(1.0, 0.0, steps + 1, device=device)
-            
-    for bn_path in tqdm(bns):
-        bn = torch.from_numpy(np.load(bn_path)).to(device)
-        bn = bn.unsqueeze(0)
-        bn = bn.transpose(1, 2)
-        bn_interpolate = torch.nn.functional.interpolate(bn, size=int(bn.shape[2] * 4), mode='linear', align_corners=True)
-        bn = bn_interpolate.transpose(1, 2)
+def setup_seed(seed):
+     torch.manual_seed(seed)
+     torch.cuda.manual_seed_all(seed)
+     np.random.seed(seed)
+     torch.backends.cudnn.deterministic = True
 
-        seq_len = bn.shape[1]
-        num_chunks = seq_len // chunk_size
-        if seq_len % chunk_size != 0:
-            num_chunks += 1
-            
-        cache = None
-        x_pred_collect = []
+@torch.inference_mode()
+def inference(model, vocos, bn_path, spk_emb, prompt_mel, chunk_size, steps, device):
+    if steps == 1:
+        timesteps = torch.tensor([1.0, 0.0], device=device)
+    elif steps == 2:
+        timesteps = torch.tensor([1.0, 0.8, 0.0], device=device)
+    else:
+        timesteps = torch.linspace(1.0, 0.0, steps + 1, device=device)
+    bn = torch.from_numpy(np.load(bn_path)).to(device)
+    bn = bn.unsqueeze(0)
+    bn = bn.transpose(1, 2)
+    bn_interpolate = torch.nn.functional.interpolate(bn, size=int(bn.shape[2] * 4), mode='linear', align_corners=True)
+    bn = bn_interpolate.transpose(1, 2)
 
-        offset = 0
-        for chunk_id in range(num_chunks):
-            start = chunk_id * chunk_size
-            end = min(start + chunk_size, seq_len)
-            bn_chunk = bn[:, start:end]
-            if chunk_id == 0:
-                cache = None
-            
-            x = torch.randn(bn_chunk.shape[1], 80, device=device, dtype=bn_chunk.dtype).unsqueeze(0)
-            cfg_mask = torch.ones([x.shape[0]], dtype=torch.bool, device=device)
-            
-            for i in range(steps):
-                t = time_points[i]
-                r = time_points[i+1]
-                t_tensor = torch.full((x.size(0),), t, device=x.device)
-                r_tensor = torch.full((x.size(0),), r, device=x.device)
-                with torch.inference_mode():
-
-                    u = model(
-                        x,
-                        t_tensor,
-                        r_tensor,
-                        cache=cache,
-                        cond=bn_chunk,
-                        spks=spk_emb,
-                        offset=offset,
-                        is_inference=True,
-                    )
-
-                    
-                    x = x - (t - r) * u
-                
-            offset += x.shape[1]
-            if cache == None:
-                cache = x
-            else:
-                cache = torch.cat([cache, x], dim=1)
-                
-            x_pred_collect.append(x) 
+    seq_len = bn.shape[1]         
+    cache = None
+    x_pred = []
+    B = 1
+    offset = 0
+    kv_cache = None
+    
+    s_t_item = time.time()
+    for start in range(0, seq_len, chunk_size):
+        end = min(start + chunk_size, seq_len)
+        bn_chunk = bn[:, start:end]
         
-        x_pred = torch.cat(x_pred_collect, dim=1)
+        
+        x = torch.randn(B, bn_chunk.shape[1], 80, device=device, dtype=bn_chunk.dtype)
+        
+        for i in range(steps):
+            t = timesteps[i]
+            r = timesteps[i+1]
+            t_tensor = torch.full((B,), t, device=x.device)
+            r_tensor = torch.full((B,), r, device=x.device)
+
+            u, tmp_kv_cache = model(x, t_tensor, r_tensor, cache=cache, cond=bn_chunk, spks=spk_emb,
+                prompts=prompt_mel, offset=offset, is_inference=True, kv_cache=kv_cache)
+            x = x - (t - r) * u
+
+        kv_cache = tmp_kv_cache
+        offset += x.shape[1]
+        cache = x
+        x_pred.append(x)
+        
+        if offset > 40 and kv_cache[0][0].shape[2] > C_KV_CACHE_MAX_LEN:
+            for i in range(len(kv_cache)):
+                new_k = kv_cache[i][0][:, :, -C_KV_CACHE_MAX_LEN:, :]
+                new_v = kv_cache[i][1][:, :, -C_KV_CACHE_MAX_LEN:, :]
+                kv_cache[i] = (new_k, new_v)
+    x_pred = torch.cat(x_pred, dim=1)
+    mel = x_pred.transpose(1,2)
+    mel = (mel + 1) / 2
+    y_g_hat = vocos.decode(mel)
+    time_item = time.time() - s_t_item
+
+    return mel, y_g_hat, time_item
+    
+def inference_list(model, vocos, bns, spk_emb, prompt_mel, chunk_size, steps, spk_result_dir, device):
+  
+    rtfs = []
+    all_duration = 0
+    all_time = 0
+    
+    for bn_path in tqdm(bns):
+        
+        mel, wav, time_item = inference(model, vocos, bn_path, spk_emb, prompt_mel, chunk_size, steps, device)
         
         base_filename = os.path.basename(bn_path).split(".")[0]
         mel_output_path = os.path.join(spk_result_dir, base_filename + ".npy")
-        np.save(mel_output_path, x_pred.cpu().numpy())
+        np.save(mel_output_path, mel.cpu().numpy())
         
-        mel = x_pred.transpose(1,2)
-        mel = (mel + 1) / 2
-        y_g_hat = vocos.decode(mel)
+        
         spk_result_wav_dir = spk_result_dir + "_wav"
         os.makedirs(spk_result_wav_dir, exist_ok=True)
         wav_output_path = os.path.join(spk_result_wav_dir, base_filename + ".wav")
-        torchaudio.save(wav_output_path, y_g_hat.cpu(), 16000)
-            
+        torchaudio.save(wav_output_path, wav.cpu(), 16000)
+        duration = wav.shape[1] / 16000
+        
+        all_duration += duration
+        all_time += time_item
+        rtf = time_item / duration
+        rtfs.append(rtf)
+    print("RTF: ", all_time / all_duration)
+    print("mean rtf: ", np.mean(rtfs))
             
 if __name__ == "__main__":
     
@@ -91,17 +110,23 @@ if __name__ == "__main__":
 
     parser.add_argument('--model-config', type=str, default=None)
     parser.add_argument('--ckpt-path', type=str, default=None)
+    parser.add_argument('--vocoder-ckpt-path', type=str, default=None)
     parser.add_argument('--output-dir', type=str, default=None)
     parser.add_argument('--bn-path', type=str, default=None)
     parser.add_argument('--spk-emb-path', type=str, default=None)
+    parser.add_argument('--prompt-path', type=str, default=None)
     parser.add_argument('--chunk-size', type=int, default=1)
     parser.add_argument('--steps', type=int, default=1)
+    parser.add_argument('--seed', type=int, default=42, help='random seed')
 
     args = parser.parse_args()
+        
+    setup_seed(args.seed)
     
     output_dir = args.output_dir
     bn_path = args.bn_path
     spk_emb_path = args.spk_emb_path
+    prompt_path = args.prompt_path
     chunk_size = args.chunk_size
     steps = args.steps
     
@@ -112,15 +137,15 @@ if __name__ == "__main__":
     model_cls = DiT
     ckpt_path = args.ckpt_path
     
-    device='cuda'
+    device = 'cpu'
     dit_model = model_cls(**model_config["model"])
     total_params = sum(p.numel() for p in dit_model.parameters())
     print(f"Total parameters: {total_params}")
     dit_model = dit_model.to(device)
-    dit_model = load_checkpoint(dit_model, ckpt_path, device=device, use_ema=True)
+    dit_model = load_checkpoint(dit_model, ckpt_path, device=device, use_ema=False)
     dit_model = dit_model.float()
-
-    vocos = Vocos.load_selfckpt("/vocoder/vocos-main/logs/vc_10ms/version_0").to(device)
+    dit_model.eval()
+    vocos = torch.jit.load(args.vocoder_ckpt_path).to(device)
 
     bns = [path for path in glob.glob(bn_path + "/*.npy")]
     
@@ -128,11 +153,19 @@ if __name__ == "__main__":
     spk_emb = torch.from_numpy(spk_emb).to(device)
     if len(spk_emb.shape) == 1:
         spk_emb = spk_emb.unsqueeze(0)
+        
+    prompt_mel = np.load(prompt_path)
+    prompt_mel = torch.from_numpy(prompt_mel).to(device)
+    if len(prompt_mel.shape) < 3:
+        prompt_mel = prompt_mel.unsqueeze(0)
+    if prompt_mel.shape[1] == 80:
+        prompt_mel = prompt_mel.transpose(1, 2)
     
-    inference(model=dit_model,
+    inference_list(model=dit_model,
               vocos=vocos,
               bns=bns,
               spk_emb=spk_emb,
+              prompt_mel=prompt_mel,
               chunk_size=chunk_size,
               steps=steps,
               spk_result_dir=output_dir,
