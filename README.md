@@ -117,6 +117,10 @@ MeanVC is released under the Apache License 2.0. This open-source license allows
 
 MeanVC is designed for research and legitimate applications in voice conversion technology. Users must obtain proper consent from individuals whose voices are being converted or used as references. We strongly discourage any malicious use including impersonation, fraud, or creating misleading audio content. Users are solely responsible for ensuring their use cases comply with ethical standards and legal requirements.
 
+## ❤️ Acknowledgments
+Our work is built upon the following open-source projects [MeanFlow](https://github.com/haidog-yaqub/MeanFlow), [F5-TTS](https://github.com/SWivid/F5-TTS) and [Vocos](https://github.com/gemelo-ai/vocos). Thanks to the authors for their great work, and if you have any questions, you can first check them on their respective issues.
+
+
 ## 📄 Citation
 
 If you find our work helpful, please cite our paper:
