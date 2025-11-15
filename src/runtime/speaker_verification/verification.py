@@ -7,7 +7,7 @@ from tqdm import tqdm
 import numpy as np
 import torch.nn.functional as F
 from torchaudio.transforms import Resample
-from .ecapa_tdnn import ECAPA_TDNN_SMALL
+from src.runtime.speaker_verification.ecapa_tdnn import ECAPA_TDNN_SMALL
 import glob
 
 MODEL_LIST = ['ecapa_tdnn', 'hubert_large', 'wav2vec2_xlsr', 'unispeech_sat', "wavlm_base_plus", "wavlm_large"]
