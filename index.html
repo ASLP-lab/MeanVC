@@ -36,7 +36,9 @@
             <!-- <a href="https://openreview.net/forum?id=ExuBFYtCQU">ICLR 2025</a> |
 	    	<a href="https://arxiv.org/pdf/2409.00750">Arxiv</a> |
             <a href="https://huggingface.co/amphion/MaskGCT">Hugging Face</a> | -->
-            <a href="https://github.com/ASLP-lab/MeanVC">GitHub Repo</a>
+            <a href="https://arxiv.org/pdf/2510.08392">Arxiv</a> |
+			<a href="https://github.com/ASLP-lab/MeanVC">GitHub Repo</a> |
+			<a href="https://huggingface.co/ASLP-lab/MeanVC">Hugging Face</a>
         </p>
 	</div>
 	<p style="text-align: justify;"><b>Abstract</b> Zero-shot voice conversion (VC) aims to transfer timbre from a source speaker to any unseen target speaker while preserving linguistic content. Growing application scenarios demand models with streaming inference capabilities. This has created a pressing need for models that are simultaneously fast, lightweight, and high-fidelity. However, existing streaming methods typically rely on either autoregressive (AR) or non-autoregressive (NAR) frameworks, which either require large parameter sizes to achieve strong performance or struggle to generalize to unseen speakers. In this study, we propose MeanVC, a lightweight and streaming zero-shot VC approach. MeanVC introduces a diffusion transformer with a chunk-wise autoregressive denoising strategy, combining the strengths of both AR and NAR paradigms for efficient streaming processing. By introducing mean flows, MeanVC regresses the average velocity field during training, enabling zero-shot VC with superior speech quality and speaker similarity in a single sampling step by directly mapping from the start to the endpoint of the flow trajectory. Additionally, we incorporate diffusion adversarial post-training to mitigate over-smoothing and further enhance speech quality. Experimental results demonstrate that MeanVC significantly outperforms existing zero-shot streaming VC systems, achieving superior conversion quality with higher efficiency and significantly fewer parameters.
@@ -47,6 +49,8 @@
       <ul>
         <li><a href="#model-overview">Model Overview</a></li>
         <li><a href="#zero-shot-vc-samples">Streaming Zero-shot VC</a></li>
+		<li><a href="#celebrities_voice_conversion">Celebrities Voice Conversion</a></li>
+		<li><a href="#Ethics-Statement">Ethics Statement</a></li>
 		<li><a href="#Reference">Reference</a></li>
       </ul>
 	</p>
@@ -191,6 +195,63 @@
 			</table>
 		</div>
 </div>
+
+
+<div class="container pt-5 mt-5 shadow-lg p-5 mb-5 bg-white rounded">
+	<h2 id="celebrities_voice_conversion" style="text-align: center;">Celebrities Voice Conversion</h2>
+		<div class="table-responsive pt-3">
+			<table class="table table-hover pt-2">
+				<thead>
+				<tr>
+				<th style="text-align: center">Celebrity Voice</th>
+				<th style="text-align: center">Source</th>
+				<th style="text-align: center">Converted</th>
+				</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Spk/celeb_zh_caixukun.wav" autoplay/>Your browser does not support the audio element.</audio><br>蔡徐坤 (Xukun Cai)</td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Source/00005335-00000090.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/celeb_samples/celeb_zh_caixukun|00005335-00000090.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+					</tr>
+					<tr>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Spk/celeb_zh_dingzhen.wav" autoplay/>Your browser does not support the audio element.</audio><br>丁真 (Zhen Ding)</td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Source/10002858-00000038.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/celeb_samples/celeb_zh_dingzhen|10002858-00000038.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+					</tr>
+					<tr>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Spk/celeb_zh_zhaozhongxiang.wav" autoplay/>Your browser does not support the audio element.</audio><br>赵忠祥 (Zhongxiang Zhao)</td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Source/00004928-00000062.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/celeb_samples/celeb_zh_zhaozhongxiang|00004928-00000062.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+					</tr>
+					<tr>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Spk/celeb_zh_zhenhuan.wav" autoplay/>Your browser does not support the audio element.</audio><br>甄嬛 (Zhen Huan)</td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Source/00005170-00000025.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/celeb_samples/celeb_zh_zhenhuan|00005170-00000025.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+					</tr>
+					<tr>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Spk/celeb_zh_huafei.wav" autoplay/>Your browser does not support the audio element.</audio><br>华妃 (Huafei)</td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/Source/00005099-00000075.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+						<td style="vertical-align : middle;text-align:center;"><audio controls="controls" style="width: 190px;"><source src="sample/celeb_samples/celeb_zh_huafei|00005099-00000075.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+					</tr>
+					<tr>
+					</tr>
+				</tbody>
+			</table>
+	</div>
+</div>
+
+
+<div class="container pt-5 mt-5 shadow-lg p-5 mb-5 bg-white rounded">		
+	<h2 id="Ethics-Statement" style="text-align: center;">Ethics Statement</h2>
+	<body>
+		<p style="text-align: justify;">MeanVC and the demostrating audios in this page are intended solely for academic research and ethical, non-commercial use. Users must obtain explicit consent from all involved speakers (source and target) before any voice conversion, and must not employ the system for impersonation, fraud, disinformation, harassment, or any illegal or deceptive activities. Users are required to comply with all applicable laws regarding privacy, intellectual property, and anti-deepfake regulation. The developers disclaim all liability for unethical or unlawful use and request that any misuse be reported through the designated contact channels.
+	</p>
+
+	</body>
+</div>
+
+
 
 
 <div class="container pt-5 mt-5 shadow-lg p-5 mb-5 bg-white rounded">		
