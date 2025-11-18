@@ -237,7 +237,7 @@ class FeedForward(nn.Module):
 class Attention(nn.Module):
     def __init__(
         self,
-        processor: JointAttnProcessor | AttnProcessor | ChunkAttnProcessor,
+        processor: AttnProcessor | ChunkAttnProcessor,
         dim: int,
         heads: int = 8,
         dim_head: int = 64,

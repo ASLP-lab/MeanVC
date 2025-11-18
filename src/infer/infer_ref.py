@@ -112,8 +112,14 @@ def extract_features_from_audio(source_path, reference_path, asr_model, sv_model
         for i in range(0, source_fbanks.shape[1], stride):
             fbank_chunk = source_fbanks[:, i:i+decoding_window, :]
             if fbank_chunk.shape[1] < required_cache_size:
-                break
-                
+                pad_size = required_cache_size - fbank_chunk.shape[1]
+                fbank_chunk = torch.nn.functional.pad(
+                    fbank_chunk, 
+                    (0, 0, 0, pad_size),
+                    mode='constant', 
+                    value=0.
+                )
+
             encoder_output, att_cache, cnn_cache = asr_model.forward_encoder_chunk(
                 fbank_chunk, offset, required_cache_size, att_cache, cnn_cache
             )

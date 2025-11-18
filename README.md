@@ -66,6 +66,22 @@ python src/runtime/run_rt.py --target-path "path/to/target_voice.wav"
 
 When you run the script, you will be prompted to select your audio input (microphone) and output (speaker) devices from a list.
 
+### 4. Offline Voice Conversion
+
+For batch processing or converting pre-recorded audio files, use the offline conversion script.
+
+```bash
+bash scripts/infer_ref.sh
+```
+
+Before running the script, you need to configure the following paths in `scripts/infer_ref.sh`:
+
+-   `source_path`: Path to the source audio file or directory containing multiple audio files to be converted
+-   `reference_path`: Path to a clean audio file of the target speaker (used as voice reference)
+-   `output_dir`: Directory where converted audio files will be saved (default: `src/outputs`)
+-   `steps`: Number of denoising steps (default: 2)
+
+
 ## 🏋️‍♀️ Training
 
 To train the model on your own dataset, follow these steps.
