@@ -154,6 +154,14 @@ If you find our work helpful, please cite our paper:
 
 If you are interested in leaving a message to our research team, feel free to email guobin.ma@mail.nwpu.edu.cn
 
+You’re welcome to join our WeChat group for technical discussions, updates.
+
+
+<p align="center">
+    <img src="figs/meanvc_QR.png" width="500"/>
+</p>
+
+
 <p align="center">
     <img src="figs/npu@aslp.jpeg" width="500"/>
 </p>
