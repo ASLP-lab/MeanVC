@@ -158,7 +158,7 @@ You’re welcome to join our WeChat group for technical discussions, updates.
 
 
 <p align="center">
-    <img src="figs/meanvc_QR.png" width="500"/>
+    <img src="figs/meanvc_QR.png" width="300"/>
 </p>
 
 
@@ -166,3 +166,6 @@ You’re welcome to join our WeChat group for technical discussions, updates.
     <img src="figs/npu@aslp.jpeg" width="500"/>
 </p>
 
+<p align="center">
+    <img src="figs/geely_logo.jpg" width="350"/>
+</p>
