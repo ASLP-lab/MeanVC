@@ -163,9 +163,6 @@ You’re welcome to join our WeChat group for technical discussions, updates.
 
 
 <p align="center">
-    <img src="figs/npu@aslp.jpeg" width="500"/>
-</p>
-
-<p align="center">
-    <img src="figs/geely_logo.jpg" width="350"/>
+    <img src="figs/npu@aslp.jpeg" height="120" style="margin-right: 20px;"/>
+    <img src="figs/geely_logo.jpg" height="120"/>
 </p>
