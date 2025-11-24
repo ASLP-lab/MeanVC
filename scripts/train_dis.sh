@@ -12,8 +12,8 @@ accelerate launch --config-file default_config.yaml \
     --main_process_port $port \
     --num_processes ${num_gpus} \
     --gpu_ids ${cuda} \
-    src/train/train.py \
-    --model-config src/config/160ms.json \
+    src/train/train_2.py \
+    --model-config src/config/config_160ms.json \
     --batch-size 16 \
     --max-len 1000 \
     --flow-ratio 0.50 \
