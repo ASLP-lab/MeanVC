@@ -41,6 +41,7 @@ def main():
     trainer = Trainer(
         model,
         args,
+        model_config,
         args.epochs,
         args.learning_rate,
         num_warmup_updates=args.num_warmup_updates,
