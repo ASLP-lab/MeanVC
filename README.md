@@ -158,7 +158,7 @@ You’re welcome to join our WeChat group for technical discussions, updates.
 
 
 <p align="center">
-    <img src="figs/meanvc_QR.jpg" width="300"/>
+    <img src="figs/meanvc_QR.png" width="300"/>
 </p>
 
 
